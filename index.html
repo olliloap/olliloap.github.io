@@ -1,9 +1,308 @@
 <html>
 <head>
 <title>NFL Data Analysis</title>
-
-<img>
-<img src="https://i.imgur.com/lwVL40u.png">    
-
+<style>
+h1{text-align: center;}
+p {text-align: center;}
+div {text-align: center;}
+pre{background-color: #000004;padding: 10px;border-radius: 5px;overflow: auto;}
+code {font-family: Consolas, "Courier New", monospace;color: #ffffff;}
+</style>
 </head>
 <body>
+    <div style="height: 50px;"></div>
+<h1>NFL Data Analysis Project for CS1033</h1>
+<div style="height: 500px;"></div>
+<div>Written by Jade Paolillo</div>
+<div style="height: 100px;"></div>
+<h1>Khan Academy Data Science Review:</h1>
+<div>Data Tools:</div>
+<p>I have used python and have a solid base understanding of statistics already. Having used spreadsheets and CSVs before this section was not very difficult. Learning which graph to use for each type of data analysis was the most helpful section of data tools. Finding patterns in data sets makes sense, finding lines of best fit or just getting the trend of the data is not too difficult once you see a few graphs.</p>
+<div> Big Data:</div>
+<p>Having learned about big data from a previous class this section was mostly review for me. The understanding that data takes up space and in the digital age there is more data being produced than ever before. This leads to lots of unused data which opens opportunities for data analysis and increasing efficiency in almost every field. It makes sense that different types of data take up more space. An image logically takes up more space than plain text and the type of data you are using will tell you how much storage you need and how much you will have to update the servers containing the data.
+</p>
+<div>Bias in Machine Learning:</div>
+<p>Machine learning algorithms learn the same way organic beings do. However, just like human beings, depending on the data a neural network is trained on it will contain the same bias as its environment. This is like taking a kid from the deep south in the 1800’s and asking their political opinions, based on the environment around them (the data) their opinion will change dramatically. It is important to understand the biases that can show up in these networks and change the datasets used to train to maintain the best possible outcomes from these algorithms.</p>
+<div>Unit Test:</div>
+<p>I got a 90% on the unit test for this section. It was not particularly difficult. The questions I missed were more from me not fully reading the question rather than a lack of understanding. Overall, the unit was an intriguing read even if it was all review for me and in the bias section I learned something new about the bias in facial recognition which is something I would not have thought about because it would not have affected me.</p>
+<h1>Selecting a Dataset for Analysis: </h1>
+<p>I am a massive American Football fan and when watching Thursday Night Football there are overlays that use neural networks to predict blitzes. This helped me decide what type of data I would like to analyze for this project. Using Pro Football Reference and an open-source data scraper for python called nflscraPy I was able to collect all metadata and season data for every regular season game dating back to the year 2000. Unfortunately, all the data was split by season, so I had 24 different CSVs’. Using pandas and python I had to combine the metadata and season data into two large datasets that are sorted by the date the game was played. To do this, first I merged the metadata all into one large set, changed the date to be in an easier format to sort by, then sorted that dataset by its date from oldest to newest. I repeated this with the season datasets and ended with two larger datasets that contain the metadata from 2000-2023 and the season data from 2000-2023. With the two sorted datasets I can work on merging them together into one large set that I will use for my data analysis. To make the large dataset I take each sorted set and use a function in pandas called “merge” and chose to merge them by event_date and tm_market to make sure all the data lines up properly. Now I have a large dataset with every regular season game from 2000 to 2023.</p>
+<div>Code Used to Sort Data:</div>
+
+<pre><code>
+import pandas as pd
+import os
+
+metadata_dir = "/Users/jadepaolillo/manim/metadata_csv"
+season_dir = "/Users/jadepaolillo/manim/season_csv"
+
+metadata = []
+season = []
+
+# read and adds all of CSV in the dir
+for file in os.listdir(metadata_dir):
+    if file.endswith('csv'):
+        file_path = os.path.join(metadata_dir, file)
+        df = pd.read_csv(file_path)
+        metadata.append(df)
+for file in os.listdir(season_dir):
+    if file.endswith('csv'):
+        file_paths = os.path.join(season_dir, file)
+        dfs = pd.read_csv(file_paths)
+        season.append(dfs)
+        
+
+# the combination of the frames
+metato2023 = pd.concat(metadata, ignore_index=False)
+seasonto2023 = pd.concat(season, ignore_index=False)
+
+# Save the frame to its own CSV
+metato2023.to_csv('/Users/jadepaolillo/manim/metadata_csv/metato2023.csv', index=False)
+seasonto2023.to_csv("/Users/jadepaolillo/manim/season_csv/seasonto2023.csv", index=False)
+
+# file path and reading the file
+metadata_dir = "/Users/jadepaolillo/manim/metadata_csv/metato2023.csv"
+season_dir = "/Users/jadepaolillo/manim/season_csv/seasonto2023.csv"
+dfs = pd.read_csv(season_dir)
+df = pd.read_csv(metadata_dir)
+
+# Make 'event_date' to be in the datetime format
+df['event_date'] = pd.to_datetime(df['event_date'])
+dfs['event_date'] = pd.to_datetime(dfs['event_date'])
+metatosort = df.columns[-1]
+seasontosort = dfs.columns[-1]
+# sort df by 'event_date'
+df_sorted = df.sort_values(by=metatosort)
+dfs_sorted = dfs.sort_values(by=seasontosort)
+df_sorted = df.sort_values(by='event_date')
+dfs_sorted = dfs.sort_values(by='event_date')
+
+# save to a new file
+sorted_meta = "/Users/jadepaolillo/manim/metadata_csv/sortedmetato2023.csv"
+sorted_season = "/Users/jadepaolillo/manim/season_csv/sortedseasonto2023.csv"
+df_sorted.to_csv(sorted_meta, index=True)
+dfs_sorted.to_csv(sorted_season, index=True)
+
+# open the new dataframes for merging into one large frame
+sorted_meta_df = pd.read_csv(sorted_meta)
+sorted_season_df = pd.read_csv(sorted_season)
+
+# Align the two sorted DataFrames by 'tm_market' and 'event_date' keys
+aligned_sorted_df = pd.merge(sorted_season_df, sorted_meta_df, 
+                    on=['tm_market', 'event_date'], 
+                    suffixes=('_season', '_meta'))
+
+# Save the merged and aligned large dataset to its own csv
+aligned = "/Users/jadepaolillo/manim/Alignednfl.csv"
+aligned_sorted_df.to_csv(aligned, index=True)
+</code></pre>
+<h1>Hypotheses Before Data Analysis:</h1>
+<p>
+1.	Does winning the coin toss correlate to a greater chance of winning?
+</p>
+<div>Prediction: No, the coin toss should not change the outcome of a game considering all it changes is who gets the ball first and the direction the loser of the toss will start with.</div>
+<p>2. Has home field advantage changed as time gone on? If so, why?</p>
+<div>Prediction: I believe home field advantage will have not changed significantly throughout the seasons. This is because fans are just as passionate now as they were in the early 2000’s and I don’t believe the stadiums have filled more seats to lead to a greater home field advantage.</div>
+<h1>Code for First Hypothesis:</h1>
+<pre><code>
+import pandas as pd
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+# creating the data and all other necessary 
+nfldata = "/Users/jadepaolillo/manim/Alignednfl.csv"
+df = pd.read_csv(nfldata)
+margin = []
+tm_score = []
+opp_score = []
+tossoutcome = []
+tmname = []
+didtmwintoss = []
+yes = []
+no = []
+# filling the scores and calculating margin of victory
+for i in df['tm_score']:
+    tm_score.append(i)
+for i in df["opp_score"]:
+    opp_score.append(i)
+j = 0
+k = 0
+
+# creats a margin and can test to see if there are any negatives
+while j <= (len(tm_score) - 1):
+    marg = tm_score[j] - opp_score[j]
+    margin.append(marg)
+    j = j+1
+
+# filling team names and coin toss names
+for i in df["won_toss"]:
+    tossoutcome.append(i)
+    
+for i in df["tm_alias_meta"]:
+    tmname.append(i)
+
+# checking to see if the team who won the game won the toss
+while k <= (len(tmname) - 1):
+    if tmname[k] == tossoutcome[k]:
+        didtmwintoss.append(1)
+        k = k + 1
+    else:
+        didtmwintoss.append(0)
+        k = k + 1
+
+for i in range(len(didtmwintoss)):
+    if didtmwintoss[i] == 1:
+        yes.append(didtmwintoss[i])
+    else:
+        no.append(didtmwintoss[i])
+        
+label = ["won toss", "lost toss"]
+size = [((len(yes)/len(didtmwintoss))*100), ((len(no)/len(didtmwintoss))*100)]
+color = ["#1395ff","#ff1313"]
+plt.pie(size, labels=label, colors=color, autopct='%1.1f%%')
+
+plt.title("Does the Coin Toss lead to a Win?")
+plt.show()
+</code></pre>
+<h1>Breakdown of Coin Toss Code:</h1>
+<p>This code will create a two separate lists in python which contain all coin toss wins and losses for the winning team respectively. Using these lists and the total number of games it is possible to get the percentage of wins for each list. Then using matplotlib I create a pie chart.</p>
+<h1>Analysis of Pie Chart:</h1>
+<div><img src="https://i.imgur.com/lwVL40u.png"; width=350></div>
+<p>Looking at the Pie chart it seems to be that winning a coin toss does lead to a few more wins. Although there are more wins, the margin of victory from winning and lossing is not significant. It is only slightly more likely than a regular coin flip and there may be other factors that come into play.</p>
+<h1>Was my First Hypothesis Accurate?</h1>
+<p>Somewhat, I do believe that a coin toss does not lead to a significant advantage however there is a larger margin of victory than I would have assumed before looking at the data.</p>
+<h1>Code for the Second Hypothesis:</h1>
+<pre><code>
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+nfldata = "/Users/jadepaolillo/manim/Alignednfl.csv"
+df = pd.read_csv(nfldata)
+
+# splits the data by year
+seasongroups = df.groupby("season_season")
+
+homewinper = []
+
+# getting the # of wins per season at home
+for season, group in seasongroups:
+    total_games = len(group)
+    home_games = group[group["tm_location"] == "H"]
+    home_win_count = len(home_games)
+    
+    # percent of home wins
+    if total_games > 0:
+        homewinper.append((home_win_count/total_games)*100)
+    else:
+        homewinper.append(0)
+        
+averageatt = []
+
+# getting the average attendance per season
+for season, group in seasongroups:
+    total_games = len(group)
+    attendance = group["attendance"].sum()
+    if total_games > 0:
+        averageatt.append((attendance/total_games))
+    else:
+        averageatt.append(0)
+
+
+maximumatt = max(averageatt)
+stdatt = []
+i = 0
+
+# creates a standardized attendence based on the max average then makes
+# it a percentage so I can compare to the win percentage at home
+while i < len(averageatt):
+    standard = (averageatt[i] / maximumatt) * 100
+    stdatt.append(standard)
+    i = i + 1
+
+fixedstdatt = []
+fixedyears = []
+years = list(range(2000, 2024))
+
+# removal of the outliers and placing in new lists
+for j, value in enumerate(stdatt):
+    if value > 50:
+        fixedstdatt.append(value)
+        fixedyears.append(years[j])
+# linear regression
+modelwin = LinearRegression()
+modelatt = LinearRegression()
+# turns the years array to be vertical not horizontal like a list
+years1 = np.array(years).reshape(-1, 1)
+modelwin.fit(years1, homewinper)
+# Gives me the line of best fit for win percentage
+line_of_best_fit_win = modelwin.predict(years1)
+
+# same as above but with the stdatt to get a linear regression
+fixedyears1 = np.array(fixedyears).reshape(-1, 1)
+modelatt.fit(fixedyears1, fixedstdatt)
+line_of_best_fit_att = modelatt.predict(fixedyears1)
+
+# created the x values for all graphs
+x = np.linspace(2000, 2023, 24)
+labels = ["Home Win Percentage", "Standardized Average Attendence",
+          "Standardized Average Attendence w/o Outlier", "Line of Best Fit"]
+
+# plot of home win percentage alone
+plt.figure(figsize=(10,6))
+plt.plot(x, homewinper, color = "#000000", label = labels[0])
+plt.plot(years1, line_of_best_fit_win, color = "#ff0000", label = labels[3], 
+         linestyle = "dotted")
+plt.grid(True)
+plt.ylabel("% of Wins if the Team is at Home (%)")
+plt.xlabel("Year starting at 2000")
+plt.title("Home Field Advantage")
+plt.legend()
+plt.show()
+  
+# plot of standardized average attendance
+plt.figure(figsize = (10,6))
+plt.plot(x, stdatt, color = "#ff0000", label = labels[1])
+plt.grid(True)
+plt.ylabel("Average Attendance Standardized to Maximum Average (%)")
+plt.xlabel("Year Starting With 2000")
+plt.title("Standardized Attendence per Year")
+plt.legend()
+plt.show()
+
+# plot of stdatt without 2020, the outlier
+plt.figure(figsize = (10,6))
+plt.plot(fixedyears, fixedstdatt, color = "#000000", label = labels[2])
+plt.plot(fixedyears1, line_of_best_fit_att, color = "#ff0000", 
+         label = labels[3], linestyle = "dotted")
+plt.grid(True)
+plt.ylabel("Average Attendance Standardized to Maximum Average (%)")
+plt.xlabel("Year Starting With 2000")
+plt.title("Standardized Attendence w/o 2020 per Year")
+plt.legend()
+plt.show()
+
+# plot of both to see if any trends appear
+plt.figure(figsize = (10,6))
+plt.plot(x, homewinper, color = "#000000", label = labels[0])
+plt.plot(fixedyears, fixedstdatt, color = "#ff0000", label = labels[2])
+plt.grid(True)
+plt.ylabel("Percentage (%)")
+plt.xlabel("Year Starting With 2000")
+plt.title("Home Win Percentage vs. Average Attendence")
+plt.legend()
+plt.show()
+</code></pre>
+<h1>Breakdown of Home Field Advantage Code:</h1>
+<p>First step to graphing the home field advantage is creating lists that are filled with only teams that were at home and also won. Using that list it is possible to take the total number of games and get a win percentage per season. The next step is getting the average attendance per season and the standardized attendance by dividing each average attendance by the highest average attenence. Getting this standardized attendance allows us to create a percentage that can be plotted along side the home field advantage in order to visualize any trends that may immerge. Alongside the standardized attendance we also remove the outlier of 2020 as there was a pandemic and stadiums could not fill seats.Third step is getting the linear regression line for the standardized attendance without the 2020 season and the home field advantage. Finally we create four graphs: Home Field Advantage with Trend Line, Standardized Average Attendance, Standardized Average Attendance without 2020 and with Trend Line, and a mixed chart with Standardized Attendance and the Home Field Advantage.</p>
+<h1>All Charts for the Second Hypothesis:</h1>
+<div><img src="https://i.imgur.com/YZE5FuY.png"; width=500><img src="https://i.imgur.com/xKD9KN3.png"; width=500></div>
+<div><img src="https://i.imgur.com/iomQIbu.png"; width=500><img src="https://i.imgur.com/ojzO8k3.png"; width=500></div>
+<h1>Was my Second Hypothesis Correct?</h1>
+<p>Home field advantage has steadily gone up as time is going on. It will never hit 100% because there are times an away team is the better team that day but there is clearly a strong advantage to being at home. I wanted to see if the average attendance has gone up and if that attendance is going up at a similar rate to the home field advantage. I checked this by first getting the average attendance for each season then dividing that by the largest average attendance to get a percentage that allows me to see how full the stadiums were on a given season. I had to remove the 2020 data for this attendance as it was an outlier due to the pandemic and stadiums not allowing fans in. When I graph the standardized average attendance without the 2020 season I can see a similar positive trend as the home field advantage. When the home field advantage is graphed on the same chart as the standardized average attendance, it helps showcase how the two are trending upward are similar rates. Although this is quite interesting, I do not know if the increase in average attendance is the cause for a stronger home field advantage. There is a strong case to be made that the fans can change the outcome of a game as any Chiefs or Seahawks fans will attest to. However, the first thing we learn in statistics is that correlation does not equal causation and there may be other factors that can cause a home team to win. Overall I do not believe my hypothesis was totally correct, there is a slight upward trend on the home field advantage as the years go on and that trend follows the line of best fit for the standardized average without the outlier.</p>
+
+</body>
+</html>
