@@ -1,2 +1,1 @@
-# Jade's Domain
-# Yeah I code, how did you know?!
+# This website contains all data analysis and necessary learning for cs 1030.
